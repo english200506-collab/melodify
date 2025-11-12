@@ -12,23 +12,21 @@ const LeftSidebar = () => {
         fetchAlbums();
     }, [fetchAlbums]);
 
-    console.log({ albums });
-
     return (
-        <div className='h-full flex flex-col gap-2'>
+        <div className="h-full flex flex-col gap-2">
             {/* Navigation menu */}
 
             {/* Library section */}
-            <div className='flex-1 rounded-lg bg-zinc-900 p-4'>
-                <div className='flex items-center justify-between mb-4'>
-                    <div className='flex items-center text-white px-2'>
-                        <Library className='size-5 mr-2' />
-                        <span className='hidden md:inline'>Playlists</span>
+            <div className="flex-1 rounded-lg bg-card p-4 transition-colors duration-300">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center text-foreground px-2">
+                        <Library className="size-5 mr-2" />
+                        <span className="hidden md:inline">Playlists</span>
                     </div>
                 </div>
 
-                <ScrollArea className='h-[calc(100vh-300px)]'>
-                    <div className='space-y-2'>
+                <ScrollArea className="h-[calc(100vh-300px)]">
+                    <div className="space-y-2">
                         {isLoading ? (
                             <PlaylistSkeleton />
                         ) : (
@@ -36,17 +34,19 @@ const LeftSidebar = () => {
                                 <Link
                                     to={`/albums/${album._id}`}
                                     key={album._id}
-                                    className='p-2 hover:bg-zinc-800 rounded-md flex items-center gap-3 group cursor-pointer'
+                                    className="p-2 rounded-md flex items-center gap-3 group cursor-pointer hover:bg-card-hover transition-colors duration-300"
                                 >
                                     <img
                                         src={album.imageUrl}
-                                        alt='Playlist img'
-                                        className='size-12 rounded-md flex-shrink-0 object-cover'
+                                        alt="Playlist img"
+                                        className="size-12 rounded-md flex-shrink-0 object-cover"
                                     />
 
-                                    <div className='flex-1 min-w-0 hidden md:block'>
-                                        <p className='font-medium truncate'>{album.title}</p>
-                                        <p className='text-sm text-zinc-400 truncate'>Album • {album.artist}</p>
+                                    <div className="flex-1 min-w-0 hidden md:block">
+                                        <p className="font-medium truncate text-foreground">{album.title}</p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            Album • {album.artist}
+                                        </p>
                                     </div>
                                 </Link>
                             ))
@@ -57,4 +57,5 @@ const LeftSidebar = () => {
         </div>
     );
 };
+
 export default LeftSidebar;

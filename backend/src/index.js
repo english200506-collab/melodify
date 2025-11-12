@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express from "express";
-import { clerkMiddleware } from "@clerk/express";
+// import { clerkMiddleware } from "@clerk/express";
 import fileUpload from "express-fileupload";
 import cors from "cors";
 import path from "path";
@@ -20,7 +20,7 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-app.use(clerkMiddleware());
+// app.use(clerkMiddleware());
 app.use(cors({
     origin: (origin, callback) => {
         callback(null, true);

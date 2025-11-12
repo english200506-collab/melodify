@@ -1,23 +1,33 @@
-import { clerkClient } from "@clerk/express";
+import jwt from "jsonwebtoken";
 
-export const protectRoute = async (req, res, next) => {
-    if (!req.auth.userId) {
-        return res.status(401).json({ message: "Unauthorized - you must be logged in" });
+export const protectRoute = (req, res, next) => {
+    const authHeader = req.header("Authorization");
+    if (!authHeader) {
+        return res.status(401).json({ message: "Нет токена, доступ запрещён" });
     }
-    next();
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // храним сам объект токена
+        req.userId = decoded.id; // храним отдельно id для удобства
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Неверный или истёкший токен" });
+    }
 };
 
-export const requireAdmin = async (req, res, next) => {
+// Проверка на администратора
+export const requireAdmin = (req, res, next) => {
     try {
-        const currentUser = await clerkClient.users.getUser(req.auth.userId);
-        const isAdmin = process.env.ADMIN_EMAIL === currentUser.primaryEmailAddress?.emailAddress;
-
-        if (!isAdmin) {
-            return res.status(403).json({ message: "Unauthorized - you must be an admin" });
+        // допустим, мы храним email в токене или сверяем по id
+        if (req.user.email !== process.env.ADMIN_EMAIL) {
+            return res.status(403).json({ message: "Доступ запрещён: требуется админ" });
         }
 
         next();
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: "Ошибка проверки администратора" });
     }
 };

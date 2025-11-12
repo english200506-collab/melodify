@@ -5,15 +5,19 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    imageUrl: {
-        type: String,
-        required: true,
-    },
-    clerkId: {
+    email: {
         type: String,
         required: true,
         unique: true,
     },
-}, {timestamps: true});
+    password: {
+        type: String,
+        required: true,
+    },
+    imageUrl: {
+        type: String,
+        default: "",
+    }
+}, { timestamps: true });
 
 export const User = mongoose.model("User", userSchema);

@@ -11,23 +11,35 @@ interface AuthStore {
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
-    isAdmin: true,
+    isAdmin: false,
     isLoading: false,
     error: null,
 
     checkAdminStatus: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axiosInstance.get("/admin/check");
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("Токен отсутствует");
+
+            const response = await axiosInstance.get("/admin/check", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
             set({ isAdmin: response.data.admin });
         } catch (error: any) {
-            set({ isAdmin: false, error: error.response.data.message });
+            console.error("Ошибка проверки админа:", error);
+            set({
+                isAdmin: false,
+                error: error.response?.data?.message || error.message,
+            });
         } finally {
             set({ isLoading: false });
         }
     },
 
     reset: () => {
-        set({ isAdmin: true, isLoading: false, error: null });
+        set({ isAdmin: false, isLoading: false, error: null });
     },
 }));

@@ -3,6 +3,12 @@ import type {Album, Song, Stats} from "@/types";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 
+interface Playlist {
+    _id: string;
+    title: string;
+    songs: Song[];
+}
+
 interface MusicStore {
     songs: Song[];
     albums: Album[];
@@ -21,11 +27,19 @@ interface MusicStore {
     fetchTrendingSongs: () => Promise<void>;
     fetchStats: () => Promise<void>;
     fetchSongs: () => Promise<void>;
+    fetchUserPlaylists: () => Promise<void>;
     deleteSong: (id: string) => Promise<void>;
     deleteAlbum: (id: string) => Promise<void>;
+    userPlaylists: Playlist[];
+
+    createPlaylist: (title: string) => Promise<void>;
+    addSongToPlaylist: (playlistId: string, song: Song) => Promise<void>;
+    removeSongFromPlaylist: (playlistId: string, songId: string) => Promise<void>;
+    deletePlaylist: (playlistId: string) => Promise<void>;
+    downloadPlaylist: (playlistId: string, filename?: string) => void;
 }
 
-export const useMusicStore = create<MusicStore>((set) => ({
+export const useMusicStore = create<MusicStore>((set, get) => ({
     albums: [],
     songs: [],
     isLoading: false,
@@ -65,7 +79,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
             set((state) => ({
                 albums: state.albums.filter((album) => album._id !== id),
                 songs: state.songs.map((song) =>
-                    song.albumId === state.albums.find((a) => a._id === id)?.title ? { ...song, album: null } : song
+                    song.albumId === id ? { ...song, albumId: null } : song
                 ),
             }));
             toast.success("Album deleted successfully");
@@ -75,6 +89,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
             set({ isLoading: false });
         }
     },
+
 
     fetchSongs: async () => {
         set({ isLoading: true, error: null });
@@ -160,4 +175,87 @@ export const useMusicStore = create<MusicStore>((set) => ({
             set({ isLoading: false });
         }
     },
+
+    userPlaylists: [],
+
+    createPlaylist: async (title) => {
+        try {
+            const { data } = await axiosInstance.post("/playlists", { title });
+            set((state) => ({ userPlaylists: [...state.userPlaylists, data] }));
+            toast.success("Плейлист создан!");
+        } catch (err) {
+            toast.error("Ошибка при создании плейлиста");
+        }
+    },
+
+    fetchUserPlaylists: async () => {
+        try {
+            const { data } = await axiosInstance.get("/playlists");
+            set({ userPlaylists: data });
+        } catch (err: any) {
+            toast.error("Ошибка при загрузке плейлистов");
+        }
+    },
+
+    addSongToPlaylist: async (playlistId: string, song: Song) => {
+        try {
+            const { data } = await axiosInstance.put(`/playlists/add-song`, {
+                playlistId,
+                songId: song._id
+            });
+            set((state) => ({
+                userPlaylists: state.userPlaylists.map((pl) =>
+                    pl._id === playlistId ? data : pl
+                ),
+            }));
+            toast.success("Песня добавлена в плейлист!");
+        } catch (err) {
+            toast.error("Ошибка при добавлении песни");
+        }
+    },
+
+    removeSongFromPlaylist: async (playlistId, songId) => {
+        try {
+            const { data } = await axiosInstance.put(`/playlists/${playlistId}/remove`, { songId });
+            set((state) => ({
+                userPlaylists: state.userPlaylists.map((pl) =>
+                    pl._id === playlistId ? data : pl
+                ),
+            }));
+            toast.success("Песня удалена из плейлиста!");
+        } catch (err) {
+            toast.error("Ошибка при удалении песни");
+        }
+    },
+
+    deletePlaylist: async (playlistId) => {
+        try {
+            await axiosInstance.delete(`/playlists/${playlistId}`);
+            set((state) => ({
+                userPlaylists: state.userPlaylists.filter((pl) => pl._id !== playlistId),
+            }));
+            toast.success("Плейлист удалён!");
+        } catch (err) {
+            toast.error("Ошибка при удалении плейлиста");
+        }
+    },
+
+    downloadPlaylist: (playlistId, filename = "playlist.json") => {
+        const playlist = get().userPlaylists.find((pl) => pl._id === playlistId);
+        if (!playlist) return toast.error("Плейлист не найден");
+
+        try {
+            const blob = new Blob([JSON.stringify(playlist.songs, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("Плейлист скачан!");
+        } catch (err) {
+            toast.error("Ошибка при скачивании плейлиста");
+        }
+    },
+
 }));

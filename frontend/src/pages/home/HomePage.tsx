@@ -5,12 +5,14 @@ import FeaturedSection from "./components/FeaturedSection.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SectionGrid from "./components/SectionGrid";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import PlaylistSection from "@/components/PlaylistSection.tsx";
 
 const HomePage = () => {
     const {
         fetchFeaturedSongs,
         fetchMadeForYouSongs,
         fetchTrendingSongs,
+        fetchUserPlaylists,
         isLoading,
         madeForYouSongs,
         featuredSongs,
@@ -23,7 +25,8 @@ const HomePage = () => {
         fetchFeaturedSongs();
         fetchMadeForYouSongs();
         fetchTrendingSongs();
-    }, [fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs]);
+        fetchUserPlaylists();
+    }, [fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs, fetchUserPlaylists]);
 
     useEffect(() => {
         if (madeForYouSongs.length > 0 && featuredSongs.length > 0 && trendingSongs.length > 0) {
@@ -39,6 +42,7 @@ const HomePage = () => {
                 <div className="p-4 sm:p-6">
                     <h1 className="text-2xl sm:text-3xl font-bold mb-6">Good afternoon</h1>
                     <FeaturedSection />
+                    <PlaylistSection />
 
                     <div className="space-y-8">
                         <SectionGrid title="Made For You" songs={madeForYouSongs} isLoading={isLoading} />

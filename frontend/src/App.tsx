@@ -12,6 +12,7 @@ import {useEffect} from "react";
 import LoginPage from "@/pages/login/LoginPage.tsx";
 import ProfilePage from "@/pages/profile/ProfilePage.tsx";
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
+import PlaylistPage from "@/components/PlaylistPage.tsx";
 
 function App() {
     const { checkAdminStatus } = useAuthStore();
@@ -48,6 +49,14 @@ function App() {
                         element={
                             <ProtectedRoute>
                                 <AlbumPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path='/playlists/:playlistId'
+                        element={
+                            <ProtectedRoute>
+                                <PlaylistPage />
                             </ProtectedRoute>
                         }
                     />

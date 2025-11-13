@@ -40,8 +40,6 @@ const PlaylistPage = () => {
         playAlbum(playlist.songs, index);
     };
 
-    console.log(playlist);
-
     return (
         <div className="h-full">
             <ScrollArea className="h-full rounded-md">

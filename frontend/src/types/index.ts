@@ -8,6 +8,8 @@ export interface Song {
     duration: number;
     createdAt: string;
     updatedAt: string;
+    genre: string;
+    keywords: string[];
 }
 
 export interface Album {

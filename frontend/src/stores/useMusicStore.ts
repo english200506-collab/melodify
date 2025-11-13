@@ -31,6 +31,11 @@ interface MusicStore {
     deleteSong: (id: string) => Promise<void>;
     deleteAlbum: (id: string) => Promise<void>;
     userPlaylists: Playlist[];
+    searchText: string
+    setSearchText: (text: string) => void,
+    genres: string[];
+    selectedGenre: string;
+    setSelectedGenre: (genre: string) => void;
 
     createPlaylist: (title: string) => Promise<void>;
     addSongToPlaylist: (playlistId: string, song: Song) => Promise<void>;
@@ -45,6 +50,7 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     isLoading: false,
     error: null,
     currentAlbum: null,
+    searchText: '',
     madeForYouSongs: [],
     featuredSongs: [],
     trendingSongs: [],
@@ -54,6 +60,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
         totalUsers: 0,
         totalArtists: 0,
     },
+    genres: ["Pop", "Hip-Hop", "Lo-Fi", "Rock", "Jazz", "Synthwave", "Electronic", "Chillout", "Indie Pop", "Ambient"],
+    selectedGenre: "",
+    setSelectedGenre: (genre: string) => set({ selectedGenre: genre }),
 
     deleteSong: async (id) => {
         set({ isLoading: true, error: null });
@@ -71,6 +80,8 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
             set({ isLoading: false });
         }
     },
+
+    setSearchText: (text: string) => set({ searchText: text }),
 
     deleteAlbum: async (id) => {
         set({ isLoading: true, error: null });

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader } from "lucide-react";
 import { axiosInstance } from "@/lib/axios.ts";
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -66,6 +67,12 @@ const LoginPage = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? <Loader className="animate-spin size-5 mx-auto" /> : "Войти"}
                 </Button>
+                <p className="text-center text-sm text-zinc-400">
+                    Нет аккаунта?{" "}
+                    <Link to="/register" className="text-blue-500 hover:underline">
+                        Зарегистрироваться
+                    </Link>
+                </p>
             </form>
         </div>
     );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider.tsx";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,12 @@ const RegisterPage = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? <Loader className="animate-spin size-5 mx-auto" /> : "Зарегистрироваться"}
                 </Button>
+                <p className="text-center text-sm text-zinc-400">
+                    Есть аккаунт ? {" "}
+                    <Link to="/login" className="text-blue-500 hover:underline">
+                        Войдите
+                    </Link>
+                </p>
             </form>
         </div>
     );

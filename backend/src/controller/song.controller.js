@@ -27,6 +27,7 @@ export const getFeaturedSongs = async (req, res, next) => {
                     audioUrl: 1,
                     genre: 1,
                     keywords: 1,
+                    reviews: 1,
                 },
             },
         ]);
@@ -52,6 +53,7 @@ export const getMadeForYouSongs = async (req, res, next) => {
                     audioUrl: 1,
                     genre: 1,
                     keywords: 1,
+                    reviews: 1,
                 },
             },
         ]);
@@ -77,6 +79,7 @@ export const getTrendingSongs = async (req, res, next) => {
                     audioUrl: 1,
                     genre: 1,
                     keywords: 1,
+                    reviews: 1,
                 },
             },
         ]);

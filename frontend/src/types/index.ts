@@ -10,6 +10,7 @@ export interface Song {
     updatedAt: string;
     genre: string;
     keywords: string[];
+    reviews: any[]
 }
 
 export interface Album {

@@ -36,6 +36,12 @@ const songSchema = new mongoose.Schema(
                 type: String,
             },
         ],
+        reviews: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                comment: { type: String },
+            }
+        ],
     },
     { timestamps: true }
 );

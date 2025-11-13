@@ -21,7 +21,12 @@ export const createSong = async (req, res, next) => {
             return res.status(400).json({ message: "Please upload all files" });
         }
 
-        const { title, artist, albumId, duration } = req.body;
+        const { title, artist, albumId, duration, genre, keywords } = req.body;
+
+        if (!genre) {
+            return res.status(400).json({ message: "Genre is required" });
+        }
+
         const audioFile = req.files.audioFile;
         const imageFile = req.files.imageFile;
 
@@ -35,6 +40,8 @@ export const createSong = async (req, res, next) => {
             imageUrl,
             duration,
             albumId: albumId || null,
+            genre,
+            keywords: keywords ? JSON.parse(keywords) : [],
         });
 
         await song.save();
@@ -45,6 +52,7 @@ export const createSong = async (req, res, next) => {
                 $push: { songs: song._id },
             });
         }
+
         res.status(201).json(song);
     } catch (error) {
         console.log("Error in createSong", error);

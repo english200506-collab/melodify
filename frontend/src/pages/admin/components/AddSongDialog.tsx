@@ -24,15 +24,17 @@ interface NewSong {
 }
 
 const AddSongDialog = () => {
-	const { albums } = useMusicStore();
+	const { albums, genres } = useMusicStore();
 	const [songDialogOpen, setSongDialogOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [newSong, setNewSong] = useState<NewSong>({
+	const [newSong, setNewSong] = useState<NewSong & { genre: string; keywords: string }>({
 		title: "",
 		artist: "",
 		album: "",
 		duration: "0",
+		genre: "",
+		keywords: "",
 	});
 
 	const [files, setFiles] = useState<{ audio: File | null; image: File | null }>({
@@ -44,18 +46,25 @@ const AddSongDialog = () => {
 	const imageInputRef = useRef<HTMLInputElement>(null);
 
 	const handleSubmit = async () => {
+		if (!files.audio || !files.image) {
+			return toast.error("Please upload both audio and image files");
+		}
+		if (!newSong.genre) {
+			return toast.error("Please select a genre");
+		}
+
 		setIsLoading(true);
-
 		try {
-			if (!files.audio || !files.image) {
-				return toast.error("Please upload both audio and image files");
-			}
-
 			const formData = new FormData();
-
 			formData.append("title", newSong.title);
 			formData.append("artist", newSong.artist);
 			formData.append("duration", newSong.duration);
+			formData.append("genre", newSong.genre);
+
+			if (newSong.keywords) {
+				formData.append("keywords", JSON.stringify(newSong.keywords.split(",").map(k => k.trim())));
+			}
+
 			if (newSong.album && newSong.album !== "none") {
 				formData.append("albumId", newSong.album);
 			}
@@ -74,12 +83,10 @@ const AddSongDialog = () => {
 				artist: "",
 				album: "",
 				duration: "0",
+				genre: "",
+				keywords: "",
 			});
-
-			setFiles({
-				audio: null,
-				image: null,
-			});
+			setFiles({ audio: null, image: null });
 			toast.success("Song added successfully");
 		} catch (error: any) {
 			toast.error("Failed to add song: " + error.message);
@@ -104,6 +111,7 @@ const AddSongDialog = () => {
 				</DialogHeader>
 
 				<div className='space-y-4 py-4'>
+					{/* File inputs */}
 					<input
 						type='file'
 						accept='audio/*'
@@ -111,16 +119,15 @@ const AddSongDialog = () => {
 						hidden
 						onChange={(e) => setFiles((prev) => ({ ...prev, audio: e.target.files![0] }))}
 					/>
-
 					<input
 						type='file'
-						ref={imageInputRef}
-						className='hidden'
 						accept='image/*'
+						ref={imageInputRef}
+						hidden
 						onChange={(e) => setFiles((prev) => ({ ...prev, image: e.target.files![0] }))}
 					/>
 
-					{/* image upload area */}
+					{/* Image upload */}
 					<div
 						className='flex items-center justify-center p-6 border-2 border-dashed border-zinc-700 rounded-lg cursor-pointer'
 						onClick={() => imageInputRef.current?.click()}
@@ -137,9 +144,7 @@ const AddSongDialog = () => {
 										<Upload className='h-6 w-6 text-zinc-400' />
 									</div>
 									<div className='text-sm text-zinc-400 mb-2'>Upload artwork</div>
-									<Button variant='outline' size='sm' className='text-xs'>
-										Choose File
-									</Button>
+									<Button variant='outline' size='sm' className='text-xs'>Choose File</Button>
 								</>
 							)}
 						</div>
@@ -148,14 +153,12 @@ const AddSongDialog = () => {
 					{/* Audio upload */}
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Audio File</label>
-						<div className='flex items-center gap-2'>
-							<Button variant='outline' onClick={() => audioInputRef.current?.click()} className='w-full'>
-								{files.audio ? files.audio.name.slice(0, 20) : "Choose Audio File"}
-							</Button>
-						</div>
+						<Button variant='outline' onClick={() => audioInputRef.current?.click()} className='w-full'>
+							{files.audio ? files.audio.name.slice(0, 20) : "Choose Audio File"}
+						</Button>
 					</div>
 
-					{/* other fields */}
+					{/* Title */}
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Title</label>
 						<Input
@@ -165,6 +168,7 @@ const AddSongDialog = () => {
 						/>
 					</div>
 
+					{/* Artist */}
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Artist</label>
 						<Input
@@ -174,6 +178,7 @@ const AddSongDialog = () => {
 						/>
 					</div>
 
+					{/* Duration */}
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Duration (seconds)</label>
 						<Input
@@ -185,6 +190,7 @@ const AddSongDialog = () => {
 						/>
 					</div>
 
+					{/* Album */}
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Album (Optional)</label>
 						<Select
@@ -197,12 +203,39 @@ const AddSongDialog = () => {
 							<SelectContent className='bg-zinc-800 border-zinc-700'>
 								<SelectItem value='none'>No Album (Single)</SelectItem>
 								{albums.map((album) => (
-									<SelectItem key={album._id} value={album._id}>
-										{album.title}
-									</SelectItem>
+									<SelectItem key={album._id} value={album._id}>{album.title}</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
+					</div>
+
+					{/* Genre */}
+					<div className='space-y-2'>
+						<label className='text-sm font-medium'>Genre</label>
+						<Select
+							value={newSong.genre}
+							onValueChange={(value: string) => setNewSong({ ...newSong, genre: value })}
+						>
+							<SelectTrigger className='bg-zinc-800 border-zinc-700'>
+								<SelectValue placeholder='Select genre' />
+							</SelectTrigger>
+							<SelectContent className='bg-zinc-800 border-zinc-700'>
+								{genres.map((genre) => (
+									<SelectItem key={genre} value={genre}>{genre}</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					{/* Keywords */}
+					<div className='space-y-2'>
+						<label className='text-sm font-medium'>Keywords (comma separated)</label>
+						<Input
+							value={newSong.keywords}
+							onChange={(e) => setNewSong({ ...newSong, keywords: e.target.value })}
+							className='bg-zinc-800 border-zinc-700'
+							placeholder='e.g. chill, relaxing, study'
+						/>
 					</div>
 				</div>
 
@@ -218,4 +251,5 @@ const AddSongDialog = () => {
 		</Dialog>
 	);
 };
+
 export default AddSongDialog;

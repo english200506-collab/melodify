@@ -11,21 +11,25 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
+import {useAuth} from "@/providers/AuthProvider.tsx";
 
 const FeaturedSection = () => {
-    const { isLoading, featuredSongs, error } = useMusicStore();
+    const { isLoading, featuredSongs: storeSongs, error } = useMusicStore();
+    const { user} = useAuth();
     const [open, setOpen] = useState(false);
     const [selectedSong, setSelectedSong] = useState<any>(null);
     const [comment, setComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [allUsers, setAllUsers] = useState<any>([]);
+    const [featuredSongs, setFeaturedSongs] = useState(storeSongs);
 
     const handleOpen = (song: any) => {
         setSelectedSong(song);
-        const existingComment = song.reviews?.[0]?.comment || "";
-        setComment(existingComment);
+        const myReview = song.reviews?.find((r: any) => r.userId === user?.id);
+        setComment(myReview?.comment || "");
         setOpen(true);
     };
 
@@ -36,11 +40,29 @@ const FeaturedSection = () => {
         }
 
         setIsSubmitting(true);
+
         try {
-            await axiosInstance.post(`/users/songs/${selectedSong._id}/review`, { comment });
-            toast.success(selectedSong.reviews?.length ? "Отзыв обновлён!" : "Отзыв добавлен!");
-            selectedSong.reviews = [{ comment }];
+            const existing = selectedSong.reviews?.find((r: any) => r.userId === user?.id);
+
+            const { data: updatedReviews } = await axiosInstance.post(
+                `/users/songs/${selectedSong._id}/review`,
+                { comment }
+            );
+
+            setSelectedSong({
+                ...selectedSong,
+                reviews: updatedReviews
+            });
+
+            setFeaturedSongs((prev: any[]) =>
+                prev.map((s) =>
+                    s._id === selectedSong._id ? { ...s, reviews: updatedReviews } : s
+                )
+            );
+
+            toast.success(existing ? "Отзыв обновлён!" : "Отзыв добавлен!");
             setOpen(false);
+
         } catch (error: any) {
             console.error("Ошибка при добавлении отзыва:", error);
             toast.error(error.response?.data?.message || "Не удалось добавить отзыв");
@@ -48,6 +70,23 @@ const FeaturedSection = () => {
             setIsSubmitting(false);
         }
     };
+
+
+    const getUserName = (id: string) => {
+        if (id === user?.id) return "Вы";
+        return allUsers.find((u: any) => u._id === id)?.fullName || "Пользователь";
+    };
+
+    useEffect(() => {
+        axiosInstance.get("/users")
+            .then(res => setAllUsers(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        setFeaturedSongs(storeSongs); // синхронизация с хранилищем
+    }, [storeSongs]);
+
 
     if (isLoading) return <FeaturedGridSkeleton />;
     if (error) return <p className="text-destructive mb-4 text-lg">{error}</p>;
@@ -91,6 +130,30 @@ const FeaturedSection = () => {
                                         Отзыв о песне
                                     </DialogTitle>
                                 </DialogHeader>
+
+                                <div className="space-y-3 mb-4">
+                                    {selectedSong?.reviews?.length ? (
+                                        selectedSong.reviews.map((review: any) => {
+                                            const isMy = review.userId === user?.id;
+
+                                            return (
+                                                <div
+                                                    key={review.userId}
+                                                    className={`p-3 rounded-md border
+                                ${isMy ? "border-emerald-500 bg-emerald-500/10" : "border-zinc-700"}
+                            `}
+                                                >
+                                                    <p className="text-sm text-foreground">{review.comment}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        {isMy ? "Ваш отзыв" : `${getUserName(review.userId)}` || 'Пользователь'}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">Отзывов пока нет</p>
+                                    )}
+                                </div>
 
                                 <p className="text-sm text-muted-foreground mb-2">
                                     {song.title} — {song.artist}

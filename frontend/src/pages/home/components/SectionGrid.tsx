@@ -1,7 +1,7 @@
 import type { Song } from "@/types";
 import PlayButton from "./PlayButton";
 import AddToPlaylist from "@/components/AddToPlaylist.tsx";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { MessageSquare } from "lucide-react";
 import {
     Dialog,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
+import {useAuth} from "@/providers/AuthProvider.tsx";
 
 type SectionGridProps = {
     title: string;
@@ -26,12 +27,30 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [comment, setComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [allUsers, setAllUsers] = useState<any>([]);
+    const { user} = useAuth();
+    const [localSongs, setLocalSongs] = useState<Song[]>(songs);
 
     const handleOpen = (song: Song) => {
         setSelectedSong(song);
-        const existingComment = song.reviews?.[0]?.comment || "";
-        setComment(existingComment);
+        const myReview = song.reviews?.find(r => r.userId === user?.id);
+        setComment(myReview?.comment || "");
         setOpen(true);
+    };
+
+    useEffect(() => {
+        axiosInstance.get("/users")
+            .then(res => setAllUsers(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        setLocalSongs(songs);
+    }, [songs]);
+
+    const getUserName = (id: string) => {
+        if (id === user?.id) return "Вы";
+        return allUsers.find((u: any) => u._id === id)?.fullName || "Пользователь";
     };
 
     const handleSubmit = async () => {
@@ -41,11 +60,21 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
         }
 
         setIsSubmitting(true);
-        try {
-            await axiosInstance.post(`/users/songs/${selectedSong._id}/review`, { comment });
-            toast.success(selectedSong.reviews?.length ? "Отзыв обновлён!" : "Отзыв добавлен!");
 
-            selectedSong.reviews = [{ comment }];
+        try {
+            const { data: updatedReviews } = await axiosInstance.post(
+                `/users/songs/${selectedSong._id}/review`,
+                { comment }
+            );
+
+            // Обновляем selectedSong и локальный список песен
+            const updatedSong = { ...selectedSong, reviews: updatedReviews };
+            setSelectedSong(updatedSong);
+            setLocalSongs(prev =>
+                prev.map(s => (s._id === updatedSong._id ? updatedSong : s))
+            );
+
+            toast.success("Отзыв сохранён!");
             setOpen(false);
         } catch (error: any) {
             console.error("Ошибка при добавлении отзыва:", error);
@@ -64,7 +93,7 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {songs.map((song) => (
+                {localSongs.map((song) => (
                     <div
                         key={song._id}
                         className="bg-card/40 p-4 rounded-xl group relative cursor-pointer overflow-hidden hover:bg-card-hover/40 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -104,6 +133,32 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
                                                 Отзыв о песне
                                             </DialogTitle>
                                         </DialogHeader>
+
+                                        <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                                            {selectedSong?.reviews?.length ? (
+                                                selectedSong.reviews.map(review => {
+                                                    const isMy = review.userId === user?.id;
+                                                    return (
+                                                        <div
+                                                            key={review._id}
+                                                            className={`p-3 rounded-md border ${
+                                                                isMy
+                                                                    ? "border-emerald-500 bg-emerald-500/10"
+                                                                    : "border-zinc-700"
+                                                            }`}
+                                                        >
+                                                            <p className="text-sm text-foreground">{review.comment}</p>
+                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                {isMy ? "Ваш отзыв" : getUserName(review.userId)}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground">Отзывов пока нет</p>
+                                            )}
+                                        </div>
+
                                         <p className="text-sm text-muted-foreground mb-2">
                                             {song.title} — {song.artist}
                                         </p>

@@ -72,91 +72,95 @@ const ProfilePage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="min-h-screen overflow-y-auto bg-background text-foreground p-6">
             {/* Плейлисты */}
-            <div className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 text-center">Мои плейлисты</h2>
-                <div className="flex flex-wrap justify-center gap-6">
-                    {userPlaylists.map((playlist: any) => (
-                        <div
-                            key={playlist._id}
-                            className="bg-card p-4 rounded-md shadow hover:shadow-lg transition-shadow w-64 flex flex-col"
-                        >
-                            <img
-                                src={playlist.songs[0]?.imageUrl || "/default-cover.png"}
-                                alt={playlist.title}
-                                className="w-full h-40 object-cover rounded-md mb-4"
-                            />
-                            <h3 className="font-semibold text-lg mb-2 text-center">{playlist.title}</h3>
-                            <p className="text-sm text-muted-foreground mb-4 text-center">
-                                {playlist.songs.length} {playlist.songs.length === 1 ? "песня" : "песен"}
-                            </p>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="mt-auto flex items-center justify-center gap-2"
-                                onClick={() => handleDownloadPlaylist(playlist)}
+            <div className="overflow-y-scroll max-h-screen pb-40">
+
+
+                <div className="mb-12">
+                    <h2 className="text-2xl font-bold mb-6 text-center">Мои плейлисты</h2>
+                    <div className="flex flex-wrap justify-center gap-6">
+                        {userPlaylists.map((playlist: any) => (
+                            <div
+                                key={playlist._id}
+                                className="bg-card p-4 rounded-md shadow hover:shadow-lg transition-shadow w-64 flex flex-col"
                             >
-                                <Download className="size-4" />
-                                Скачать
-                            </Button>
-                        </div>
-                    ))}
+                                <img
+                                    src={playlist.songs[0]?.imageUrl || "/default-cover.png"}
+                                    alt={playlist.title}
+                                    className="w-full h-40 object-cover rounded-md mb-4"
+                                />
+                                <h3 className="font-semibold text-lg mb-2 text-center">{playlist.title}</h3>
+                                <p className="text-sm text-muted-foreground mb-4 text-center">
+                                    {playlist.songs.length} {playlist.songs.length === 1 ? "песня" : "песен"}
+                                </p>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-auto flex items-center justify-center gap-2"
+                                    onClick={() => handleDownloadPlaylist(playlist)}
+                                >
+                                    <Download className="size-4" />
+                                    Скачать
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Форма профиля */}
-            <div className="flex justify-center">
-                <form
-                    onSubmit={handleSave}
-                    className="bg-card p-8 rounded-md w-full max-w-md space-y-6 shadow-lg transition-colors duration-300"
-                >
-                    <h1 className="text-2xl font-bold text-center">Профиль</h1>
-
-                    {error && <p className="text-destructive text-sm">{error}</p>}
-                    {success && <p className="text-accent text-sm">{success}</p>}
-
-                    <Input
-                        type="text"
-                        placeholder="Full Name"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required
-                    />
-                    <Input type="email" placeholder="Email" value={email} disabled />
-                    <Input
-                        type="password"
-                        placeholder="Новый пароль (оставьте пустым, если не хотите менять)"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader className="animate-spin size-5 mx-auto" /> : "Сохранить"}
-                    </Button>
-
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full flex items-center justify-center gap-2"
-                        onClick={toggleTheme}
+                {/* Форма профиля */}
+                <div className="flex justify-center">
+                    <form
+                        onSubmit={handleSave}
+                        className="bg-card p-8 rounded-md w-full max-w-md space-y-6 shadow-lg transition-colors duration-300"
                     >
-                        {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                        {theme === "dark" ? "Светлая тема" : "Тёмная тема"}
-                    </Button>
+                        <h1 className="text-2xl font-bold text-center">Профиль</h1>
 
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => {
-                            logout();
-                            navigate("/login");
-                        }}
-                    >
-                        Выйти
-                    </Button>
-                </form>
+                        {error && <p className="text-destructive text-sm">{error}</p>}
+                        {success && <p className="text-accent text-sm">{success}</p>}
+
+                        <Input
+                            type="text"
+                            placeholder="Full Name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            required
+                        />
+                        <Input type="email" placeholder="Email" value={email} disabled />
+                        <Input
+                            type="password"
+                            placeholder="Новый пароль (оставьте пустым, если не хотите менять)"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? <Loader className="animate-spin size-5 mx-auto" /> : "Сохранить"}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full flex items-center justify-center gap-2"
+                            onClick={toggleTheme}
+                        >
+                            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                            {theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            className="w-full"
+                            onClick={() => {
+                                logout();
+                                navigate("/login");
+                            }}
+                        >
+                            Выйти
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     );

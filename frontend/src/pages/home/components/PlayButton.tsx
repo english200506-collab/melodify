@@ -2,14 +2,20 @@ import { Button } from "@/components/ui/button";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import type {Song} from "@/types";
 import { Pause, Play } from "lucide-react";
+import {axiosInstance} from "@/lib/axios.ts";
 
 const PlayButton = ({ song }: { song: Song }) => {
     const { currentSong, isPlaying, setCurrentSong, togglePlay } = usePlayerStore();
     const isCurrentSong = currentSong?._id === song._id;
 
-    const handlePlay = () => {
+    const handlePlay = async () => {
         if (isCurrentSong) togglePlay();
         else setCurrentSong(song);
+        try {
+            await axiosInstance.put(`/songs/play/${song._id}`)
+        } catch (error) {
+            console.log('play count', error);
+        }
     };
 
     return (

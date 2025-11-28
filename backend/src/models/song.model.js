@@ -31,6 +31,10 @@ const songSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        playCount: {
+            type: Number,
+            default: 0, // Начинаем с 0
+        },
         keywords: [
             {
                 type: String,

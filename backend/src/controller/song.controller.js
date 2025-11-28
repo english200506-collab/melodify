@@ -64,27 +64,70 @@ export const getMadeForYouSongs = async (req, res, next) => {
     }
 };
 
+// export const getTrendingSongs = async (req, res, next) => {
+//     try {
+//         const songs = await Song.aggregate([
+//             {
+//                 $sample: { size: 4 },
+//             },
+//             {
+//                 $project: {
+//                     _id: 1,
+//                     title: 1,
+//                     artist: 1,
+//                     imageUrl: 1,
+//                     audioUrl: 1,
+//                     genre: 1,
+//                     keywords: 1,
+//                     reviews: 1,
+//                 },
+//             },
+//         ]);
+//
+//         res.json(songs);
+//     } catch (error) {
+//         next(error);
+//     }
+// };
+
 export const getTrendingSongs = async (req, res, next) => {
     try {
-        const songs = await Song.aggregate([
-            {
-                $sample: { size: 4 },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    title: 1,
-                    artist: 1,
-                    imageUrl: 1,
-                    audioUrl: 1,
-                    genre: 1,
-                    keywords: 1,
-                    reviews: 1,
-                },
-            },
-        ]);
+        const songs = await Song.find({})
+            .sort({ playCount: -1 })
+            .limit(4)
+            .select(
+                "_id title artist imageUrl audioUrl genre keywords reviews playCount"
+            );
 
         res.json(songs);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const incrementPlayCount = async (req, res, next) => {
+    try {
+        const { songId } = req.params;
+
+        if (!songId) {
+            return res.status(400).json({ message: "Song ID is required." });
+        }
+
+        const updatedSong = await Song.findByIdAndUpdate(
+            songId,
+            { $inc: { playCount: 1 } },
+            { new: true }
+        );
+
+        if (!updatedSong) {
+            return res.status(404).json({ message: "Song not found." });
+        }
+
+        res.status(200).json({
+            message: "Play count incremented successfully.",
+            playCount: updatedSong.playCount
+        });
+
     } catch (error) {
         next(error);
     }
